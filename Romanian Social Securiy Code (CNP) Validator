@@ -1,0 +1,153 @@
+/*inainte de a rula macro:*/
+/*1.ne asiguram ca cnp-ul de verificat este string*/
+/*2.in in= se trece denumirea data set-ului de verif*/
+/*3. in out= se trece denumirea data set-ului rezultat*/
+/*in dataset-ul rezultat wrong_cnp = 0 pentru cnp-urile corect si 1 pentru incorect*/
+%macro wrong_cnp_var_test(cnp_string=, in=,out=);
+
+	data &out.(drop=v_1 
+		v_2 
+		v_3 
+		v_4 
+		v_5 
+		v_6 
+		v_7 
+		v_8 
+		v_9 
+		v_10 
+		v_11 
+		v_12 
+		f_1y1 
+		f_1y2 
+		f_1y3 
+		f_1y4 
+		f_1y5 
+		f_1y6 
+		f_1y7 
+		f_1y8 
+		f_1y9 
+		f_1y10 
+		f_1y11 
+		f_1y12 
+		f_2y1 
+		f_2y2 
+		f_2y3 
+		f_2y4 
+		f_2y5 
+		f_2y6 
+		f_2y7 
+		f_2y8 
+		f_2y9 
+		f_2y10 
+		f_2y11 
+		f_2y12 
+		f_2y13 
+		dim_cnp 
+		i 
+		kk 
+		kk1 
+		r 
+		vf);
+		set &in.;
+
+		/*codul de verificare cnp*/
+		array v{*} v_1-v_12;
+		v{1}=2;
+		v{2}=7;
+		v{3}=9;
+		v{4}=1;
+		v{5}=4;
+		v{6}=6;
+		v{7}=3;
+		v{8}=5;
+		v{9}=8;
+		v{10}=2;
+		v{11}=7;
+		v{12}=9;
+
+		/*****/
+		/*vector colector*/
+		array rez{*}  f_1y1-f_1y12;
+		array rez1{*} f_2y1-f_2y13;
+
+		/*****/
+		dim_cnp = length(strip(&cnp_string.));
+
+		if dim_cnp ne 13 then
+			do;
+				wrong_cnp = 1;
+			end;
+		else
+			do;
+				do i=1 to 12;
+					if anydigit(substr(strip(&cnp_string.),i,1),1)>0 then
+						do;
+							rez{i}=input(substr(strip(&cnp_string.),i,1),1.)*v{i};
+							rez1{i} = 0;
+						end;
+					else
+						do;
+							rez1{i} = 1;
+						end;
+				end;
+
+				kk=sum(of rez{*});
+				kk1=sum(of rez1{*});
+				r=kk-(11*int(kk/11));
+
+				if r=10 then
+					do;
+						vf=1;
+					end;
+				else
+					do;
+						vf=r;
+					end;
+
+				if input(substr(strip(&cnp_string.),13,1),1.)=vf and kk1=0 and kk>0 then
+					do;
+						wrong_cnp=0;
+					end;
+				else
+					do;
+						wrong_cnp=1;
+					end;
+			end;
+	run;
+
+	data &out.
+		(rename=(wrong_cnp2 = wrong_cnp) drop=wrong_cnp wrong_cnp1)
+	;
+		set &out.;
+
+		if input(substr(strip(&cnp_string.),1,1),1.)=0 then
+			do;
+				wrong_cnp1=1;
+			end;
+		else
+			do;
+				wrong_cnp1=0;
+			end;
+
+		wrong_cnp2= min(1,sum(wrong_cnp, wrong_cnp1));
+	run;
+
+	proc sql;
+		create table &out. as
+			select t1.*,
+				case 
+					when 
+					mdy(input(cat("",substr(t1.&cnp_string.,4,2)),8.),input(cat("",substr(t1.&cnp_string.,6,2)),8.),input(cat("19",substr(t1.&cnp_string.,2,2)),8.)) is missing then 
+					1 
+					else 0 
+				end 
+			as wrong_cnp1,
+				max(wrong_cnp, calculated wrong_cnp1) as test_sum_W
+			from &out. t1;
+	quit;
+
+	data &out. (rename=(test_sum_W = wrong_cnp ) drop= wrong_cnp wrong_cnp1);
+		set &out.;
+	run;
+
+%mend wrong_cnp_var_test;
