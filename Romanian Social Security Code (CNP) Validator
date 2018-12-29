@@ -3,6 +3,7 @@
 /*2.in in= se trece denumirea data set-ului de verif*/
 /*3. in out= se trece denumirea data set-ului rezultat*/
 /*in dataset-ul rezultat wrong_cnp = 0 pentru cnp-urile corect si 1 pentru incorect*/
+
 %macro wrong_cnp_var_test(cnp_string=, in=,out=);
 
 	data &out.(drop=v_1-v_12  f_1y1-f_1y12 f_2y1-f_2y13 dim_cnp i kk kk1 r vf);
@@ -95,8 +96,7 @@
 			select t1.*,
 				case 
 					when 
-					mdy(input(cat("",substr(t1.&cnp_string.,4,2)),8.),input(cat("",substr(t1.&cnp_string.,6,2)),8.),input(cat("19",substr(t1.&cnp_string.,2,2)),8.)) is missing then 
-					1 
+					mdy(input(cat("",substr(t1.&cnp_string.,4,2)),8.),input(cat("",substr(t1.&cnp_string.,6,2)),8.),input(cat("19",substr(t1.&cnp_string.,2,2)),8.)) is missing then 1 
 					else 0 
 				end 
 			as wrong_cnp1,
