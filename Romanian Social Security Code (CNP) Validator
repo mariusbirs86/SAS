@@ -5,52 +5,10 @@
 /*in dataset-ul rezultat wrong_cnp = 0 pentru cnp-urile corect si 1 pentru incorect*/
 %macro wrong_cnp_var_test(cnp_string=, in=,out=);
 
-	data &out.(drop=v_1 
-		v_2 
-		v_3 
-		v_4 
-		v_5 
-		v_6 
-		v_7 
-		v_8 
-		v_9 
-		v_10 
-		v_11 
-		v_12 
-		f_1y1 
-		f_1y2 
-		f_1y3 
-		f_1y4 
-		f_1y5 
-		f_1y6 
-		f_1y7 
-		f_1y8 
-		f_1y9 
-		f_1y10 
-		f_1y11 
-		f_1y12 
-		f_2y1 
-		f_2y2 
-		f_2y3 
-		f_2y4 
-		f_2y5 
-		f_2y6 
-		f_2y7 
-		f_2y8 
-		f_2y9 
-		f_2y10 
-		f_2y11 
-		f_2y12 
-		f_2y13 
-		dim_cnp 
-		i 
-		kk 
-		kk1 
-		r 
-		vf);
+	data &out.(drop=v_1-v_12  f_1y1-f_1y12 f_2y1-f_2y13 dim_cnp i kk kk1 r vf);
 		set &in.;
 
-		/*codul de verificare cnp*/
+		/*initializam codul de verificare cnp*/
 		array v{*} v_1-v_12;
 		v{1}=2;
 		v{2}=7;
