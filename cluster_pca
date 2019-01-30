@@ -1,0 +1,159 @@
+proc surveyselect 
+	data=rx_base_mount
+	samprate=.7
+	out=dev00
+	seed=1234
+	outall;
+	/*	strata PROP_PERSONALA;*/
+	strata RESIDENCE_STATUS_DESC;
+run;
+PROC SQL;
+	CREATE TABLE X_train(where=(Selected=1)) AS 
+		SELECT t1.Selected, 
+			t1.customer_rk, 
+/*			t1.PROP_PERSONALA,*/
+			t1.RESIDENCE_STATUS_DESC, 
+			t1.woe1, 
+			t1.woe2, 
+			t1.woe3, 
+			t1.Factor1, 
+			t1.Factor2, 
+			t1.Factor3, 
+			t1.Factor4, 
+			t1.Factor5, 
+			t1.Factor6, 
+			t1.Factor7, 
+			t1.Factor8, 
+			t1.Factor9, 
+			t1.Factor10, 
+			t1.Factor11, 
+			t1.Factor12, 
+			t1.Factor13, 
+			t1.Factor14
+		FROM WORK.DEV00 t1;
+QUIT;
+
+PROC SQL;
+	CREATE TABLE X_test(where=(Selected=0)) AS 
+		SELECT t1.Selected, 
+			t1.customer_rk, 
+			/*			t1.PROP_PERSONALA,*/
+	t1.RESIDENCE_STATUS_DESC,  
+	t1.woe1, 
+	t1.woe2, 
+	t1.woe3, 
+	t1.Factor1, 
+	t1.Factor2, 
+	t1.Factor3, 
+	t1.Factor4, 
+	t1.Factor5, 
+	t1.Factor6, 
+	t1.Factor7, 
+	t1.Factor8, 
+	t1.Factor9, 
+	t1.Factor10, 
+	t1.Factor11, 
+	t1.Factor12, 
+	t1.Factor13, 
+	t1.Factor14
+	FROM WORK.DEV00 t1;
+QUIT;
+
+PROC FASTCLUS DATA=X_train 
+	OUT=cluster_data
+	least=1
+		OUTSTAT=cluster_stats
+	MAXCLUSTERS=4
+		MAXITER=300;
+/*		VAR woe1--factor5;*/
+		VAR factor1--factor2;
+RUN;
+
+proc freq data=cluster_data;
+      tables RESIDENCE_STATUS_DESC*Cluster/ norow nocol;
+   run;
+
+   
+* compute 1st and 2nd canonical discriminant variables for plotting purposes;
+PROC CANDISC DATA=cluster_data OUT=canonical_data;
+	CLASS cluster;
+
+	*categorical variable, cluster number;
+/*	VAR  woe1--factor5;*/
+		VAR factor1--factor2;
+RUN;
+
+%let max_can=2;
+%let in=canonical_data;
+%let symbol=circlefilled;
+%let size=1MM;
+%let group=cluster;
+
+%macro canonic_plots;
+	%do n=1 %to &max_can.;
+		%do m=1 %to &max_can.;
+
+			PROC SGPLOT DATA= &in.;
+				SCATTER Y=Can&n. X=Can&m. / 
+				MARKERATTRS = (SYMBOL = &symbol.  SIZE = &size.)
+				GROUP=&group.;
+				TITLE 'Canonical Variables Identified by Cluster';
+			RUN;
+
+		%end;
+	%end;
+%mend canonic_plots;
+
+%canonic_plots;
+
+
+ods graphics on;
+proc hpsplit data=x_train seed=123;
+	class RESIDENCE_STATUS_DESC ;
+	model RESIDENCE_STATUS_DESC(event="1")=
+		woe1 
+		woe2 
+		woe3 
+		Factor1 
+		Factor2 
+		Factor3 
+		Factor4 
+		Factor5 
+		Factor6 
+		Factor7 
+		Factor8 
+		Factor9 
+		Factor10 
+		Factor11 
+		Factor12 
+		Factor13 
+		Factor14;
+	grow entropy;
+	prune costcomplexity;
+run;
+
+proc hpforest data=x_train 
+	maxtrees= 30 vars_to_try=4
+	seed=600 trainfraction=0.6
+	maxdepth=50 leafsize=6
+	alpha= 0.1;
+	target PROP_PERSONALA/ level=binary;
+	input 	woe1 
+		woe2 
+		woe3 
+		Factor1 
+		Factor2 
+		Factor3 
+		Factor4 
+		Factor5 
+		Factor6 
+		Factor7 
+		Factor8 
+		Factor9 
+		Factor10 
+		Factor11 
+		Factor12 
+		Factor13 
+		Factor14/ level=interval;
+	ods output fitstatistics = fit;
+run;
