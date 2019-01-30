@@ -1,0 +1,589 @@
+%let d=20180430;
+
+PROC SQL;
+	SELECT VALUE INTO:VCC_IND FROM HC_LIB.HC_INDEX_PARAMETERS WHERE VCC_VALABILITY_YEAR EQ YEAR(TODAY()) AND PARAMETER EQ 'VCC_IND';
+QUIT;
+
+/*Client Base with Age*/
+PROC SQL;
+	CREATE TABLE CUSTOMER_BASE(compress=BINARY) AS
+		SELECT 
+			T1.CUSTOMER_RK,
+			T1.CUSTOMER_ID,
+			FLOOR(T1.AGE_AT_ANALYSIS_MTH_CNT/12) AS AGE,
+			t1.CONTACT_CONSENT_FLG,
+			t1.BOSS_CODE,
+			t1.GEO_REGION_CD,
+			t1.BRANCH_CD,
+			t1.EDUCATION_LEVEL_CD,
+			t1.EMPLOYER_INDUSTRY_CD,
+			t1.RESIDENCE_STATUS_CD,
+			/*			GARNISHMENT_FLG,RISK_RATING,RISK_RATING_DT,FIRST_ACC_OPEN_DT,PRIM_RELATION_MNGR_VIENNA_CD, SEC_RELATION_MNGR_VENNA_CD,BRANCH_CD,*/
+	UPPER(t3.EDUCATION_LEVEL_DESC) AS EDUCATION_LEVEL_DESC,
+	UPPER(T4.EMPLOYER_INDUSTRY_DESC) AS EMPLOYER_INDUSTRY_DESC,
+	UPPER(T5.RESIDENCE_STATUS_DESC) AS RESIDENCE_STATUS_DESC
+	FROM
+		ACRM.D_CUSTOMER(
+		KEEP=CUSTOMER_RK DAY CUSTOMER_ID NAME AGE_AT_ANALYSIS_MTH_CNT CUSTOMER_DIVISION SUB_SEGMENT PRIM_RELATION_MNGR_VIENNA_CD
+		CUSTOMER_STATUS_CD DUMMY_FLG BRANCH_CD CUSTOMER_SEGMENT_VIENNA_CD SEC_RELATION_MNGR_VENNA_CD CONTACT_CONSENT_FLG
+		BOSS_CODE GEO_REGION_CD FIRST_ACC_OPEN_DT GARNISHMENT_FLG RISK_RATING RISK_RATING_DT
+		RESIDENCE_STATUS_CD EMPLOYER_INDUSTRY_CD EDUCATION_LEVEL_CD
+		WHERE=(
+			DAY EQ "&D." 
+			AND CUSTOMER_DIVISION eq 'Retail'
+			AND SUB_SEGMENT ne 'Staff'
+			AND UPPER(NAME) not contains 'DUMMY'
+			AND CUSTOMER_STATUS_CD IN ("O","B")
+			AND DUMMY_FLG="N"
+			AND BRANCH_CD NOT IN ("HO","STAF")
+			AND CUSTOMER_SEGMENT_VIENNA_CD IN &VCC_IND. )) T1
+			left join acrm.education_level t3
+				on t1.education_level_cd=t3.education_level_cd 
+				left join acrm.employer_industry t4
+					on t1.employer_industry_cd = t4.employer_industry_cd
+					left join acrm.residence_status t5
+						on t1.residence_status_cd = t5.residence_status_cd;
+quit;
+
+proc freq data=CUSTOMER_BASE;
+	tables 
+
+		EDUCATION_LEVEL_desc 
+		EMPLOYER_INDUSTRY_desc 
+		RESIDENCE_STATUS_desc;
+run;
+
+%abt_data(in=ABT_201706,out=abt_data201709);
+%abt_data(in=ABT_201803,out=abt_data201803);
+%abt_data(in=ABT_201804,out=abt_data201804);
+
+data for_analys_201803
+/*(drop=RESIDENCE_STATUS_DESC)*/
+;
+	set abt_data201803;
+	cust_rkx=put(CUSTOMER_RK, 8.);
+	keep
+
+
+		cust_rkx
+		RESIDENCE_STATUS_DESC
+		AGE
+		INFLOW_12M_AVG_LCY_AMT
+		INFLOW_1M_LCY_AMT
+		INFLOW_3M_AVG_LCY_AMT
+		INFLOW_6M_AVG_LCY_AMT
+		MTH_SINCE_FIRST_CLT_REGIST
+		OUTFLOW_1M_LCY_AMT
+		CASH_DB_TXN_AMT_H
+		CASH_DB_TXN_AMT_Q
+		CASH_DB_TXN_CNT_H
+		CASH_DB_TXN_CNT_Q
+		CASH_ON_TOT_TXN_AMT_H
+		CASH_ON_TOT_TXN_AMT_Q
+		CASH_ON_TOT_TXN_CNT_H
+		CASH_ON_TOT_TXN_CNT_Q
+		CH_ATM_DB_TXN_AMT_Y
+		CH_ATM_DB_TXN_CNT_Y
+		CR_ON_TOT_TXN_AMT_H
+		CR_ON_TOT_TXN_AMT_M
+		CR_ON_TOT_TXN_AMT_Q
+		CR_ON_TOT_TXN_AMT_Y
+		CR_ON_TOT_TXN_CNT_H
+		CR_ON_TOT_TXN_CNT_M
+		CR_ON_TOT_TXN_CNT_Q
+		CR_ON_TOT_TXN_CNT_Y
+		DB_CASH_ON_TOT_TXN_AMT_H
+		DB_CASH_ON_TOT_TXN_CNT_H
+		DC_DB_TXN_AMT_H
+		DC_DB_TXN_AMT_Y
+		DC_DB_TXN_CNT_H
+		DC_DB_TXN_CNT_Y
+		DC_MTH_SINCE_LAST_USE
+		MRCH_NA_TXN_AMT_Y
+		MRCH_NA_TXN_CNT_Y
+		TOT_CRD_INTL_TXN_AMT_H
+		TOT_CR_TXN_AMT_H
+		TOT_CR_TXN_AMT_M
+		TOT_CR_TXN_AMT_Q
+		TOT_CR_TXN_AMT_Y
+		TOT_CR_TXN_CNT_H
+		TOT_CR_TXN_CNT_M
+		TOT_CR_TXN_CNT_Q
+		TOT_CR_TXN_CNT_Y
+		TOT_DB_TXN_AMT_H
+		TOT_DB_TXN_AMT_M
+		TOT_DB_TXN_AMT_Q
+		TOT_DB_TXN_AMT_Y
+		TOT_DB_TXN_CNT_H
+		TOT_DB_TXN_CNT_M
+		TOT_DB_TXN_CNT_Q
+		TOT_DB_TXN_CNT_Y
+		TOT_TXN_AMT_Y
+		TOT_TXN_CNT_Y
+		TRX_ACC_CR_TXN_AMT_H
+		TRX_ACC_CR_TXN_AMT_M
+		TRX_ACC_CR_TXN_AMT_Q
+		TRX_ACC_CR_TXN_AMT_Y
+		TRX_ACC_CR_TXN_CNT_H
+		TRX_ACC_CR_TXN_CNT_M
+		TRX_ACC_CR_TXN_CNT_Q
+		TRX_ACC_CR_TXN_CNT_Y
+		TRX_ACC_DB_TXN_AMT_H
+		TRX_ACC_DB_TXN_AMT_M
+		TRX_ACC_DB_TXN_AMT_Q
+		TRX_ACC_DB_TXN_AMT_Y
+		TRX_ACC_DB_TXN_CNT_H
+		TRX_ACC_DB_TXN_CNT_M
+		TRX_ACC_DB_TXN_CNT_Q
+		TRX_ACC_DB_TXN_CNT_Y
+		TXNACC_MAX_BALANCE_AMT_Q;
+run;
+
+data for_analys_201709(drop=RESIDENCE_STATUS_DESC);
+	set abt_data201709;
+	cust_rkx=put(CUSTOMER_RK, 8.);
+	keep
+
+
+		cust_rkx
+		RESIDENCE_STATUS_DESC
+		AGE
+		INFLOW_12M_AVG_LCY_AMT
+		INFLOW_1M_LCY_AMT
+		INFLOW_3M_AVG_LCY_AMT
+		INFLOW_6M_AVG_LCY_AMT
+		MTH_SINCE_FIRST_CLT_REGIST
+		OUTFLOW_1M_LCY_AMT
+		CASH_DB_TXN_AMT_H
+		CASH_DB_TXN_AMT_Q
+		CASH_DB_TXN_CNT_H
+		CASH_DB_TXN_CNT_Q
+		CASH_ON_TOT_TXN_AMT_H
+		CASH_ON_TOT_TXN_AMT_Q
+		CASH_ON_TOT_TXN_CNT_H
+		CASH_ON_TOT_TXN_CNT_Q
+		CH_ATM_DB_TXN_AMT_Y
+		CH_ATM_DB_TXN_CNT_Y
+		CR_ON_TOT_TXN_AMT_H
+		CR_ON_TOT_TXN_AMT_M
+		CR_ON_TOT_TXN_AMT_Q
+		CR_ON_TOT_TXN_AMT_Y
+		CR_ON_TOT_TXN_CNT_H
+		CR_ON_TOT_TXN_CNT_M
+		CR_ON_TOT_TXN_CNT_Q
+		CR_ON_TOT_TXN_CNT_Y
+		DB_CASH_ON_TOT_TXN_AMT_H
+		DB_CASH_ON_TOT_TXN_CNT_H
+		DC_DB_TXN_AMT_H
+		DC_DB_TXN_AMT_Y
+		DC_DB_TXN_CNT_H
+		DC_DB_TXN_CNT_Y
+		DC_MTH_SINCE_LAST_USE
+		MRCH_NA_TXN_AMT_Y
+		MRCH_NA_TXN_CNT_Y
+		TOT_CRD_INTL_TXN_AMT_H
+		TOT_CR_TXN_AMT_H
+		TOT_CR_TXN_AMT_M
+		TOT_CR_TXN_AMT_Q
+		TOT_CR_TXN_AMT_Y
+		TOT_CR_TXN_CNT_H
+		TOT_CR_TXN_CNT_M
+		TOT_CR_TXN_CNT_Q
+		TOT_CR_TXN_CNT_Y
+		TOT_DB_TXN_AMT_H
+		TOT_DB_TXN_AMT_M
+		TOT_DB_TXN_AMT_Q
+		TOT_DB_TXN_AMT_Y
+		TOT_DB_TXN_CNT_H
+		TOT_DB_TXN_CNT_M
+		TOT_DB_TXN_CNT_Q
+		TOT_DB_TXN_CNT_Y
+		TOT_TXN_AMT_Y
+		TOT_TXN_CNT_Y
+		TRX_ACC_CR_TXN_AMT_H
+		TRX_ACC_CR_TXN_AMT_M
+		TRX_ACC_CR_TXN_AMT_Q
+		TRX_ACC_CR_TXN_AMT_Y
+		TRX_ACC_CR_TXN_CNT_H
+		TRX_ACC_CR_TXN_CNT_M
+		TRX_ACC_CR_TXN_CNT_Q
+		TRX_ACC_CR_TXN_CNT_Y
+		TRX_ACC_DB_TXN_AMT_H
+		TRX_ACC_DB_TXN_AMT_M
+		TRX_ACC_DB_TXN_AMT_Q
+		TRX_ACC_DB_TXN_AMT_Y
+		TRX_ACC_DB_TXN_CNT_H
+		TRX_ACC_DB_TXN_CNT_M
+		TRX_ACC_DB_TXN_CNT_Q
+		TRX_ACC_DB_TXN_CNT_Y
+		TXNACC_MAX_BALANCE_AMT_Q;
+run;
+
+data for_analys;
+	set abt_data;
+	cust_rkx=put(CUSTOMER_RK, 8.);
+	keep
+		INFLOW_1M_LCY_AMT
+		DB_CASH_ON_TOT_TXN_AMT_H
+		TOT_CR_TXN_AMT_M
+		TOT_DB_TXN_AMT_M
+		TRX_ACC_CR_TXN_AMT_M
+		TRX_ACC_DB_TXN_CNT_H
+		TRX_ACC_DB_TXN_CNT_M
+		TRX_ACC_DB_TXN_CNT_Q
+		TRX_ACC_DB_TXN_CNT_Y;
+run;
+
+Proc factor data= for_analys_201803(drop=RESIDENCE_STATUS_DESC)
+	simple
+	method=principal
+	priors=one
+	/*	mineigen=1*/
+	scree plot
+	rotate=varimax
+		round
+		flag=0.6
+		nfact=14
+		out=out_pca(drop=
+		AGE
+		INFLOW_3M_AVG_LCY_AMT
+		MTH_SINCE_FIRST_CLT_REGIST
+		CR_ON_TOT_TXN_AMT_H
+		CR_ON_TOT_TXN_AMT_M
+		CR_ON_TOT_TXN_AMT_Q
+		CR_ON_TOT_TXN_AMT_Y
+		DC_MTH_SINCE_LAST_USE
+		TOT_CR_TXN_AMT_Q
+		TRX_ACC_CR_TXN_AMT_Q
+
+
+		);
+	var AGE--TXNACC_MAX_BALANCE_AMT_Q;
+	;
+run;
+
+proc princomp data=  for_analys_201803(drop=RESIDENCE_STATUS_DESC)
+	out=cluster_pca
+	outstat= cluster_pca_stat
+	prefix="PRIN"n
+	singular= 1e-08
+	vardef=df
+	std 
+	plots(only)=scree
+	plots(only)=matrix
+	plots(only)= pattern
+	plots(only)= score(ellipse=prediction);
+	var INFLOW_6M_AVG_LCY_AMT
+DC_DB_TXN_AMT_H
+DC_DB_TXN_AMT_Y
+DC_DB_TXN_CNT_H
+DC_DB_TXN_CNT_Y
+TOT_CRD_INTL_TXN_AMT_H
+TOT_CR_TXN_AMT_H
+TOT_CR_TXN_CNT_Q
+TOT_DB_TXN_AMT_H
+TOT_DB_TXN_AMT_Y
+TOT_DB_TXN_CNT_H
+TOT_DB_TXN_CNT_M
+TOT_DB_TXN_CNT_Q
+TOT_DB_TXN_CNT_Y
+TOT_TXN_CNT_Y
+TRX_ACC_CR_TXN_AMT_H
+TRX_ACC_CR_TXN_CNT_H
+TRX_ACC_CR_TXN_CNT_Q
+TRX_ACC_DB_TXN_AMT_H
+TRX_ACC_DB_TXN_AMT_Y
+;
+run;
+
+
+proc corr data=out_pca outp=corr_res;
+	var factor1--factor14;
+	with INFLOW_12M_AVG_LCY_AMT--TXNACC_MAX_BALANCE_AMT_Q factor1--factor14;
+run;
+
+PROC SQL;
+	CREATE TABLE WORK.out_pca2 (where =(coalesce(factor1,factor2,factor3,factor4, factor5,
+		factor6,factor7,factor8,factor9, factor10,
+		factor11,factor12,factor13,factor14
+		)<>.))AS 
+	SELECT t1.cust_rkx as customer_rk,
+		t2.RESIDENCE_STATUS_DESC,
+	case 
+		when t2.RESIDENCE_STATUS_DESC is null then .
+		else 
+	case
+		when t2.RESIDENCE_STATUS_DESC ="PROPRIETATE PERSONALA" then 1
+		else 0 
+	end 
+	end
+as PROP_PERSONALA,
+	t2.GENDER_CD,
+	tranwrd(strip(t2.GEO_REGION_DESC)," ","_") as GEO_REGION_DESC,
+	t2.MARITAL_STATUS_CD, 
+	t1.Factor1, 
+	t1.Factor2, 
+	t1.Factor3, 
+	t1.Factor4,
+	t1.Factor5,
+	t1.Factor6, 
+	t1.Factor7, 
+	t1.Factor8, 
+	t1.Factor9,
+	t1.Factor10,
+	t1.Factor11, 
+	t1.Factor12, 
+	t1.Factor13, 
+	t1.Factor14
+FROM WORK.OUT_PCA t1
+	left join abt_data201803 t2
+		on input(t1.cust_rkx,8.) = t2.customer_rk
+	;
+QUIT;
+
+proc freq data=WORK.out_pca2(where=(RESIDENCE_STATUS_DESC not is missing 
+	and GENDER_CD not is missing 
+	and MARITAL_STATUS_CD not is missing ));
+	tables 			RESIDENCE_STATUS_DESC
+		GENDER_CD
+		GEO_REGION_DESC
+		MARITAL_STATUS_CD;
+run;
+
+PROC SQL;
+	CREATE TABLE WORK.out_pca_clust (where =(coalesce(factor1,factor2,factor3,factor4,factor5,
+		factor6,factor7,factor8,factor9, factor10,
+		factor11,factor12,factor13,factor14
+		)<>.
+		and RESIDENCE_STATUS_DESC not is missing 
+		and GENDER_CD not is missing 
+		and MARITAL_STATUS_CD not is missing
+		))AS 
+	SELECT t1.cust_rkx as customer_rk,
+		t2.RESIDENCE_STATUS_DESC,
+	case 
+		when t2.RESIDENCE_STATUS_DESC is null then .
+		else 
+	case
+		when t2.RESIDENCE_STATUS_DESC ="PROPRIETATE PERSONALA" then 1
+		else 0 
+	end 
+	end
+as PROP_PERSONALA,
+	t2.GENDER_CD,
+	tranwrd(strip(t2.GEO_REGION_DESC)," ","_") as GEO_REGION_DESC,
+	t2.MARITAL_STATUS_CD, 
+	t1.Factor1, 
+	t1.Factor2, 
+	t1.Factor3, 
+	t1.Factor4,
+	t1.Factor5,
+	t1.Factor6, 
+	t1.Factor7, 
+	t1.Factor8, 
+	t1.Factor9,
+	t1.Factor10,
+	t1.Factor11, 
+	t1.Factor12, 
+	t1.Factor13, 
+	t1.Factor14
+FROM WORK.OUT_PCA t1
+	left join abt_data201803 t2
+		on input(t1.cust_rkx,8.) = t2.customer_rk
+	;
+QUIT;
+%macro categ_to_bool(in=,out=,cls=, id=);
+
+	proc transreg data=&in. design;
+		model  class(&cls.);
+		id &id.;
+		output out=&out.
+			(drop= _TYPE_ _NAME_ Intercept)
+		;
+	run;
+
+	proc means data= &out. sum;
+		class &cls.;
+	run;
+
+%mend categ_to_bool;
+
+%categ_to_bool(in=WORK.out_pca_clust, out= WORK.out_pca_clust_bool, cls=GEO_REGION_DESC, id=customer_rk);
+%categ_to_bool(in=WORK.out_pca_clust, out= WORK.out_pca_clust_bool1, cls=GENDER_CD, id=customer_rk);
+%categ_to_bool(in=WORK.out_pca_clust, out= WORK.out_pca_clust_bool2, cls=MARITAL_STATUS_CD, id=customer_rk);
+
+data  WORK.out_pca_clust_bool_test(drop=x);
+	set  WORK.out_pca_clust_bool;
+	x = sum(of GEO_REGION_DESCR01_CRISANAMARAMU--GEO_REGION_DESCR11_BUCHAREST_WES);
+
+	if x=0 then
+		GEO_REGION_DESCR14_BUCHAREST_SE=1;
+	else GEO_REGION_DESCR14_BUCHAREST_SE=0;
+run;
+
+data  WORK.out_pca_clust_bool1_test(drop=x);
+	set  WORK.out_pca_clust_bool1;
+	x = GENDER_CDF;
+
+	if x=0 then
+		GENDER_CDM=1;
+	else GENDER_CDM=0;
+run;
+
+data  WORK.out_pca_clust_bool2_test(drop=x);
+	set  WORK.out_pca_clust_bool2;
+	x = sum(of MARITAL_STATUS_CDD--MARITAL_STATUS_CDS);
+
+	if x=0 then
+		MARITAL_STATUS_CDW=1;
+	else MARITAL_STATUS_CDW=0;
+run;
+
+PROC SQL;
+	CREATE TABLE WORK.out_pca_clustf AS 
+		SELECT 
+
+			t1.customer_rk,
+			t1.RESIDENCE_STATUS_DESC,
+			t1.factor1,
+			t1.factor2,
+			t1.factor3,
+			t1.factor4,
+			t1.factor5,
+			t2.GEO_REGION_DESCR01_CRISANAMARAMU, 
+			t2.GEO_REGION_DESCR02_BANAT, 
+			t2.GEO_REGION_DESCR03_OLTENIA, 
+			t2.GEO_REGION_DESCR04_MUNTENIA, 
+			t2.GEO_REGION_DESCR05_N_MOLDOVA, 
+			t2.GEO_REGION_DESCR06_S_MOLDOVA, 
+			t2.GEO_REGION_DESCR07_DOBROGEA, 
+			t2.GEO_REGION_DESCR08_N_TRANSILVANI, 
+			t2.GEO_REGION_DESCR09_S_TRANSILVANI, 
+			t2.GEO_REGION_DESCR10_BUCHAREST_NOR, 
+			t2.GEO_REGION_DESCR11_BUCHAREST_WES, 
+			t2.GEO_REGION_DESCR14_BUCHAREST_SE,
+			t3.GENDER_CDF,
+			t3.GENDER_CDM,
+			t4.MARITAL_STATUS_CDD, 
+			t4.MARITAL_STATUS_CDM, 
+			t4.MARITAL_STATUS_CDS,
+			t4.MARITAL_STATUS_CDW
+
+		FROM WORK.out_pca_clust t1
+			left join WORK.out_pca_clust_bool_test t2
+				on t1.customer_rk = t2.customer_rk
+			left join WORK.out_pca_clust_bool1_test t3
+				on t1.customer_rk = t3.customer_rk
+			left join WORK.out_pca_clust_bool2_test t4
+				on t1.customer_rk = t4.customer_rk;
+QUIT;
+
+data train test;
+	set out_pca_clustf;
+
+	if find(RESIDENCE_STATUS_DESC,"PROPRIETATE PERSONALA") ge 1 then
+		do;
+			lbl=1;
+			lbl_reg=1;
+		end;
+
+	if find(RESIDENCE_STATUS_DESC,"CU PARINTII") ge 1 then
+		do;
+			lbl=2;
+			lbl_reg=0;
+		end;
+
+	if find(RESIDENCE_STATUS_DESC,"CHIRIAS") ge 1 then
+		do;
+			lbl=3;
+			lbl_reg=0;
+		end;
+
+	if find(RESIDENCE_STATUS_DESC,"ALTELE") ge 1 then
+		do;
+			lbl=4;
+			lbl_reg=0;
+		end;
+
+	idnum=_N_;
+
+	IF MOD(_N_,7) = 0 THEN
+		OUTPUT test;
+	ELSE OUTPUT train;
+run;
+
+PROC STANDARD DATA=train  OUT=train_standardized MEAN=0  STD=1 replace;
+	VAR factor1--
+		/*factor5 */
+	MARITAL_STATUS_CDW;
+RUN;
+
+* Since this is a supervised cluster analysis, I know before hand there are 6 clusters;
+* one cluster for each activity, so I don't need to perform clustering for k=1,2,3,4,5;
+* Just run clustering for k=4;
+PROC FASTCLUS DATA=train_standardized  
+	OUT=cluster_data
+	OUTSTAT=cluster_stats
+	MAXCLUSTERS=7
+	MAXITER=300;
+	VAR factor1--
+	/*factor5 */
+	MARITAL_STATUS_CDW /*MARITAL_STATUS_CDW*/;
+RUN;
+
+* compute 1st and 2nd canonical discriminant variables for plotting purposes;
+PROC CANDISC DATA=cluster_data ANOVA OUT=canonical_data;
+	CLASS cluster;
+
+	*categorical variable, cluster number;
+	VAR  factor1--
+	/*factor5 */
+	MARITAL_STATUS_CDW  /*MARITAL_STATUS_CDW*/;
+RUN;
+
+%let max_can=8;
+%let in=canonical_data;
+%let symbol=CIRCLEFILLED;
+%let size=2MM;
+%let group=cluster;
+
+%macro canonic_plots;
+	%do n=1 %to &max_can.;
+		%do m=1 %to &max_can.;
+
+			PROC SGPLOT DATA= &in.;
+				SCATTER Y=Can&n. X=Can&m. / 
+				MARKERATTRS = (SYMBOL = &symbol.  SIZE = &size.)
+				GROUP=&group.;
+				TITLE 'Canonical Variables Identified by Cluster';
+			RUN;
+
+		%end;
+	%end;
+%mend canonic_plots;
+
+%canonic_plots;
+
+* sort datasets by idnum before merging;
+PROC SORT DATA=train;
+	BY idnum;
+RUN;
+
+PROC SORT DATA=cluster_data;
+	BY idnum;
+RUN;
+
+* merge datasets so I can run ANOVA on clustering results to see if clusters are significant;
+DATA merged;
+	MERGE train cluster_data;
+	BY idnum;
+RUN;
+
+* Run ANOVA to see if there are significant differences between clusters;
+PROC ANOVA DATA=merged;
+	CLASS cluster lbl;
+
+	* categorical variable;
+	MODEL lbl=cluster;
+	MEANS cluster/tukey;
+RUN;
