@@ -1,0 +1,198 @@
+/*Parsing Comma Separated Values*/
+
+data x1_aisles
+(drop='aisle_id,aisle'n)
+;
+	set aisles;
+	aisle_id = scan('aisle_id,aisle'n, 1, ",");
+	aisle= scan('aisle_id,aisle'n, 2, ",");
+run;
+
+data x1_departments
+(drop='department_id,department'n)
+;
+	set departments;
+	department_id = scan('department_id,department'n, 1, ",");
+	department= scan('department_id,department'n, 2, ",");
+run;
+data x1_products
+/*	(drop='product_id,product_name,aisle_id'n)*/
+;
+	set products;
+	product_id = scan('product_id,product_name,aisle_id'n, 1, ",");
+	product_name = 'product_id,product_name,aisle_id'n;
+	aisle_id = scan('product_id,product_name,aisle_id'n, -2, ",");
+	department_id = scan('product_id,product_name,aisle_id'n, -1, ",");
+run;
+data x1_products
+	(drop=product_name rename=(surrogate=product_name));
+	set x1_products;
+	surrogate= substr(product_name,length(product_id)+2,
+		length(substr(product_name,length(product_id)+2))
+		-length(catx(",",aisle_id,department_id))-1
+		);
+run;
+
+data x1_sample_detailed_orders
+(drop='order_id,product_id,add_to_cart_'n)
+;
+	set sample_detailed_orders;
+	order_id = scan('order_id,product_id,add_to_cart_'n, 1, ",");
+	product_id = scan('order_id,product_id,add_to_cart_'n, 2, ",");
+	add_to_cart_order = scan('order_id,product_id,add_to_cart_'n, 3, ",");
+	reordered= input(scan('order_id,product_id,add_to_cart_'n, 4, ","),2.);
+run;
+
+data x1_sample_orders
+(drop='order_id,user_id,order_number,or'n)
+;
+	set sample_orders;
+	order_id = scan('order_id,user_id,order_number,or'n, 1, ",");
+	user_id = scan('order_id,user_id,order_number,or'n, 2, ",");
+	order_number = scan('order_id,user_id,order_number,or'n, 3, ",");
+	order_dow = scan('order_id,user_id,order_number,or'n, 4, ",");
+	order_hour_of_day = scan('order_id,user_id,order_number,or'n, 5, ",");
+	days_since_prior = input(scan('order_id,user_id,order_number,or'n, 6, ","),8.);
+run;
+
+/*verify integrity of SAS uploaded data */
+proc contents data= x1_aisles;
+run;
+
+proc contents data= x1_departments;
+run;
+
+proc contents data= x1_products;
+run;
+
+proc contents data= x1_sample_detailed_orders;
+run;
+
+proc contents data= x1_sample_orders;
+run;
+
+/*Prepare data for analysis */
+
+proc sql;
+	create table work.x2_root_prd_aisl_dpt_view 
+		(where=(length(aisle)>1 
+			and length(department) >1))
+		as 
+			select t1.product_id, 
+				t1.product_name, 
+				t1.aisle_id,
+				t2.aisle,
+				t1.department_id,
+				t3.department 
+
+			from work.x1_products t1
+				left join x1_aisles t2
+					on t1.aisle_id = t2.aisle_id
+				left join x1_departments t3
+					on t1.department_id = t3.department_id
+	;
+quit;
+proc sql;
+	create table x2_mba_anlys_all as
+		select 
+			catx("#",t1.order_id, t1.user_id) as order_user_uq_key,
+			t1.order_id, 
+			t1.user_id as customer_id, 
+			t1.order_number, 
+			t1.order_dow, 
+			t1.order_hour_of_day, 
+			t1.days_since_prior,
+			t2.product_id, 
+			t3.product_name,
+			t2.add_to_cart_order, 
+			t2.reordered,
+			t3.aisle_id,
+			t3.aisle,
+			t3.department_id,
+			t3.department
+		from x1_sample_orders t1
+			left join x1_sample_detailed_orders  t2
+				on t1.order_id = t2.order_id
+			left join x2_root_prd_aisl_dpt_view  t3
+				on t2.product_id = t3.product_id
+			order by t1.user_id asc, t1.order_number asc, t2.add_to_cart_order asc;
+quit;
+
+proc sort data= x2_mba_anlys_all out=x2_mba_anlys_order_cust_uq
+	nodupkey;
+	by order_user_uq_key;
+run;
+
+
+
+/*Exploration of all variables that are available for analysis.*/
+/*let statements define macro variables containing lists of */
+/*dataset variables*/
+/*PROC FREQ is used with categorical variables*/
+
+%let categorical=order_dow order_hour_of_day aisle department;
+ods graphics;
+
+proc freq data=x2_mba_anlys_order_cust_uq;
+    tables &categorical / plots=freqplot ;
+           ;
+    title "Categorical Variable Frequency Analysis";
+run; 
+
+
+proc sql;
+	create table x2_ref1 as
+		select distinct t1.order_user_uq_key 
+			from x2_mba_anlys_order_cust_uq (where=(
+				department in ('produce', 'snacks', 'daily eggs', 'beverages')
+				and order_hour_of_day between '07' and '16'
+				and order_dow= "1"
+				))t1;
+quit;
+
+proc  sql;
+	create table x2_mba_anlys_all_prel as
+		select t1.*
+			from x2_mba_anlys_all t1
+				inner join x2_ref1 t2
+					on t1.order_user_uq_key =t2.order_user_uq_key;
+quit;
+
+proc sql;
+	create table xanlys_v1 as
+		select customer_id, department
+			from x2_mba_anlys_all_prel;
+quit;
+proc sql;
+	create table xanlys_v2 as
+		select customer_id, product_id
+			from x2_mba_anlys_all_prel;
+quit;
+
+/*after we run macro with:*/
+/*%let lib =work;  *Library Name;*/
+/*%let set =xanlys_v2;  *Dataset Name;*/
+/*%let basket_dimension = CUSTOMER_ID;  *Basket Dimension Identifier (ie customer id);*/
+/*%let analysis_unit = product_id;  *Analysis Unit Identifier (ie product id);*/
+
+PROC SQL;
+	CREATE TABLE WORK.EXPORT_MBA_RESULTS AS 
+		SELECT 
+			T2.product_name, 
+			t1.ANALYSIS_UNIT_FREQ, 
+			T3.product_name as assoc_product_name, 
+			t1.ASSOC_ANALYSIS_UNIT_FREQ, 
+			t1.FREQ_CO_OCCUR, 
+			t1.TOT_BASKET_DIMENSIONS, 
+			t1.SUPPORT, 
+			t1.CONFIDENCE, 
+			t1.EXPECTED_CONFIDENCE, 
+			t1.LIFT
+		FROM WORK.MBA_RESULTS t1
+			LEFT JOIN X1_PRODUCTS T2
+				ON t1.ANALYSIS_UNIT = T2.product_id
+			LEFT JOIN X1_PRODUCTS T3
+				ON t1.ASSOC_ANALYSIS_UNIT = T3.product_id
+order by t1.EXPECTED_CONFIDENCE desc;
+QUIT;
+
