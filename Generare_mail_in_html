@@ -1,0 +1,121 @@
+%let path = /sasdata/Libraries/Reports/CRM_email_exports/Marius/HTML/Auto_mails/Campanii_retail/mail_img;
+%let owner = MARIUS BIRSAN;
+%let x0= '<img id="_x0000_i1025"';
+%let x1=  'src="file://hofs/applications/CRM%20Integrare/Reports/CRM_email_exports/Marius/HTML/Auto_mails/Campanii_retail/mail_img/img01.jpg"';
+%let x2= 'position:absolute;margin-left:3.75pt;margin-top:.75pt;width:339pt;height:78pt;z-index:251659264;visibility:visible;mso-wrap-style:square;mso-width-percent:0;mso-height-percent:0;mso-wrap-distance-left:9pt;mso-wrap-distance-top:0;mso-wrap-distance-right:9pt;mso-wrap-distance-bottom:0;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;mso-width-percent:0;mso-height-percent:0;mso-width-relative:page;mso-height-relative:page>';
+%let x3= '<br><br>';
+filename mailbox clear;
+FILENAME Mailbox EMAIL ("XXXXXXX.ro" "XXXXX.ro"
+/*'ROUCBCVMRetail-AdvancedaCRM&DM@unicredit.ro'*/
+)
+SUBJECT="Test_html_exemplu2" content_type="text/html";
+
+DATA _NULL_;
+	FILE mailbox;
+	put '<html>';
+	put '<head>';
+	put '<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">';
+	put '</head>';
+	put '<body>';
+/*	INTRO*/
+	put '<b>';
+	put '<span style="font-size: 12pt;';
+	put 'font-family: &quot;Times New Roman&quot;,&quot;serif&quot;;">';
+	put '<img id="_x0000_i1025"';
+	put 'src="file://hofs/applications/CRM%20Integrare/Reports/CRM_email_exports/Marius/HTML/Auto_mails/Campanii_retail/mail_img/img01.jpg"';
+	put '<table style ="width:50%"> ';
+	put'<tr style="height:30.0pt">';
+	put'<td width=144 style="width:1.5in;background:#F5F7F7;padding:0in 5.4pt 0in 5.4pt;height:30.0pt">';
+	put'<b>';
+	put'<span style="font-family:UniCredit;color:#44546A">CAMPANII &nbsp;RETAIL';
+	put'</span>';
+	put'</b></td>';
+	put'<td width=468 style="width:351.0pt;background:#F5F7F7;padding:0in 5.4pt 0in 5.4pt;height:30.0pt">';
+	put'<b>';
+	put'<span style="font-family:UniCredit;color:#44546A">Echipa CVM<o:p></o:p>';
+	put'</span>';
+	put'</b></p></td></tr>';
+/*	put'<tr style="height:139.5pt"><td width=144 nowrap valign=bottom style="width:1.5in;padding:0in 5.4pt 0in 5.4pt;height:139.5pt">';*/
+	put '<tr>';
+	put '<td >';
+	put '<img width="275px" height="193px"src
+		="file://hofs/applications/CRM%20Integrare/Reports/CRM_email_exports/Marius/HTML/Auto_mails/Campanii_retail/mail_img/img02.jpg"> </img></td>';
+			put '<td >';
+	put '<img width="383px" height="181px"src
+		="file://hofs/applications/CRM%20Integrare/Reports/CRM_email_exports/Marius/HTML/Auto_mails/Campanii_retail/mail_img/img021.jpg"> </img></td>';
+	put '</tr>';
+
+	put '</table>';
+
+/*	END INTRO*/
+
+/*ACHIZITIE*/
+	put '<table style ="width:50%"> ';
+	put'<tr style="height:30.0pt">';
+	put'<td width=144 style="width:1.5in;background:#FFFFFF ;padding:0in 5.4pt 0in 5.4pt;height:30.0pt">';
+	put'<b>';
+	put'<span style="font-family:UniCredit;color:#C55A11">ACHIZITIE  &nbsp;CLIENTI';
+	put'</span>';
+	put'</b></td>';
+	put '</table>';
+
+	put '<table style ="width:50%"> ';
+	put'<tr style="height:30.0pt">';
+	put'<td width=144 style="width:1.5in;background:#FFFFFF ;padding:0in 5.4pt 0in 5.4pt;height:30.0pt">';
+	put'<span style="font-size:12.0pt;font-family:UniCredit;color:black"> <b>Campanie SMS </b> adresata catre  <b> 20.426 </b>  clienti de POS UCFin, din categoria pensionari,  pentru deschidere de cont, in vederea incasarii pensiei in cont UCB';
+	put'</span>';
+	put'</td>';
+	put '</table>';
+
+	
+	put '<table style ="width:50%"  border=0 cellspacing=0 cellpadding=0> ';
+	put'<tr style="height:30.0pt">';
+	put '<img width="57px" height="57px"src
+		="file://hofs/applications/CRM%20Integrare/Reports/CRM_email_exports/Marius/HTML/Auto_mails/Campanii_retail/mail_img/img03.jpg"> </img></td>';
+	put'<td width=468 style="width:351.0pt;padding:0in 5.4pt 0in 5.4pt;height:47.25pt">';
+	put '<p>';
+	put'<span style="font-size:12.0pt;font-family:UniCredit;color:black"> Deschide cont si incaseaza pensia de min 700 lei la UniCredit Bank pana la 31.12.2018 si primesti 100 lei cadou. Detalii http://bit.ly/UCBpensie';
+	put'</span>';
+	put '</p>';
+	put'</td>';
+	put '</table>';
+
+/*	END ACHIZITIE*/
+
+/*	FINAL*/
+	put '<table style ="width:50%"> ';
+	put'<tr style="height:30.0pt">';
+	put'<td width=144 style="width:1.5in;background:#FFFFFF ;padding:0in 5.4pt 0in 5.4pt;height:30.0pt">';
+	put'<b>';
+	put'<span style="font-family:UniCredit;color:#ff0000">NEXT  &nbsp;STEPS';
+	put'</span>';
+	put'</b></td>';
+	put '</table>';
+
+	put '<table style ="width:50%"> ';
+	put'<tr style="height:30.0pt">';
+	put'<td width=144 style="width:1.5in;background:#FFFFFF ;padding:0in 5.4pt 0in 5.4pt;height:30.0pt">';
+	put'<span style="font-size:12.0pt;font-family:UniCredit;color:black"> <b> By Marius Birsan </b> Restul e poveste si SAS advanced macro programming si drept de citire scriere pe serverul de outlook :)))) ';
+	put'</span>';
+	put'</td>';
+	put '</table>';
+
+		put '</table>';
+	put '<table style ="width:50%"  border=0 cellspacing=0 cellpadding=0> ';
+	put'<tr style="height:30.0pt">';
+	put '<img width="222px" height="47px"src
+		="file://hofs/applications/CRM%20Integrare/Reports/CRM_email_exports/Marius/HTML/Auto_mails/Campanii_retail/mail_img/logo.jpg"> </img></td>';
+	put '</table>';
+
+
+	
+/*	END FINAL*/
+
+put '</b>';
+	put '</body>';
+	put '</html>';
+run;
+
+ods html close;
+ods listing;
+filename mailbox clear;
