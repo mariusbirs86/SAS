@@ -1,0 +1,171 @@
+data a0_ref_6_49(keep=n1 n2 n3 n4 n5 n6 idx);
+set EXTRAGERI_6_49_JAN2016_JAN2022;
+idx=_n_;
+n1=put('Nr.1'n,2.);
+n2=put('Nr.2'n,2.);
+n3=put('Nr.3'n,2.);
+n4=put('Nr.4'n,2.);
+n5=put('Nr.5'n,2.);
+n6=put('Nr.6'n,2.);
+/*idx=catx("#","idx",_n_);*/
+run;
+
+data a0_ref_6_49_t;
+   set a0_ref_6_49;
+   array n{6} n1-n6;
+   Subject + 1;
+   do Time=1 to 6;
+      Strength=n{time};
+      output;
+   end;
+   drop n1-n6;
+run;
+
+PROC SQL;
+   CREATE TABLE WORK.a0_ref_6_49_t_exp AS 
+   SELECT t1.idx,
+		  t1.Strength as number, 
+          t1.Time as order 
+          
+      FROM WORK.A0_REF_6_49_T t1;
+QUIT;
+
+PROC SQL;
+   CREATE TABLE WORK.a0_ref_jkr AS 
+   SELECT
+
+          put (t1.'N1.'n,2.) as n1, 
+          put (t1.'N2.'n,2.) as n2, 
+          put (t1.'N3.'n,2.) as n3, 
+          put (t1.'N4.'n,2.) as n4, 
+          put (t1.'N5.'n,2.) as n5, 
+          cat("J",put (t1.J,2.)) as n6
+      FROM WORK.EXTRAGERI_JOKER_JAN2016_JAN_0000 t1;
+QUIT;
+
+data a0_ref_jkr_t;
+   set a0_ref_jkr;
+   array n{6} n1-n6;
+   Subject + 1;
+   do Time=1 to 6;
+      Strength=n{time};
+      output;
+   end;
+   drop n1-n6;
+run;
+
+
+verif rez
+
+
+
+data r0_ref_6_49;
+set EXTRAGERI_6_49_JAN2016_JAN2022;
+idx=_n_;
+n1=put('Nr.1'n,2.);
+n2=put('Nr.2'n,2.);
+n3=put('Nr.3'n,2.);
+n4=put('Nr.4'n,2.);
+n5=put('Nr.5'n,2.);
+n6=put('Nr.6'n,2.);
+vf_r=cat("#",catx("#",strip(n1),strip(n2),strip(n3),strip(n4),strip(n5),strip(n6)),"#");
+run;
+/**/
+/*Map	Rule*/
+/*RULE1	34 & 29 ==> 36*/
+/*Map	Rule*/
+/*RULE2	33 & 14 ==> 7*/
+
+
+%let ex1=#44#;
+%let ex2=#27#;
+%let ex3=#5#;
+%let ex4=#16#;
+%let ex5=#20#;
+%let ex6=#9#;
+
+proc sql;
+
+create table r0_verif_result as
+select t1.*,
+case when vf_r contains "&ex1." then 1 else 0 end as tp1,
+case when vf_r contains "&ex2." then 1 else 0 end as tp2,
+case when vf_r contains "&ex3." then 1 else 0 end as tp3,
+case when vf_r contains "&ex4." then 1 else 0 end as tp4,
+case when vf_r contains "&ex5." then 1 else 0 end as tp5,
+case when vf_r contains "&ex6." then 1 else 0 end as tp6,
+sum(calculated tp1,calculated tp2,calculated tp3,calculated tp4,calculated tp5,calculated tp6) as sum
+from r0_ref_6_49 t1;
+quit;
+
+PROC SQL;
+   CREATE TABLE WORK.r0_rap AS 
+   SELECT t1.sum, 
+          /* COUNT_of_sum */
+            (COUNT(t1.sum)) AS COUNT_of_sum
+      FROM WORK.R0_VERIF_RESULT t1
+      GROUP BY t1.sum;
+QUIT;
+
+PROC SQL;
+   CREATE TABLE WORK.r0_rap1 AS 
+   SELECT t1.sum, 
+          /* COUNT_of_sum */
+            (COUNT(t1.sum)) AS COUNT_of_sum
+      FROM WORK.R0_VERIF_RESULT t1
+      GROUP BY t1.sum;
+QUIT;
+
+
+
+PROC SQL;
+   CREATE TABLE WORK.r0_ref_jkr AS 
+   SELECT t1.*,
+
+          put (t1.'N1.'n,2.) as n1, 
+          put (t1.'N2.'n,2.) as n2, 
+          put (t1.'N3.'n,2.) as n3, 
+          put (t1.'N4.'n,2.) as n4, 
+          put (t1.'N5.'n,2.) as n5, 
+          cat("J",strip(put (t1.J,2.))) as n6
+      FROM WORK.EXTRAGERI_JOKER_JAN2016_JAN_0000 t1;
+QUIT;
+
+data r0_ref_jkr1;
+set r0_ref_jkr;
+vf_r=cat("#",catx("#",strip(n1),strip(n2),strip(n3),strip(n4),strip(n5),strip(n6)),"#");
+run;
+
+
+
+%let ex1=#33#;
+%let ex2=#12#;
+%let ex3=#37#;
+%let ex4=#41#;
+%let ex5=#9#;
+%let ex6=#J5#;
+
+proc sql;
+
+create table r0_verif_result_jkr as
+select t1.*,
+case when vf_r contains "&ex1." then 1 else 0 end as tp1,
+case when vf_r contains "&ex2." then 1 else 0 end as tp2,
+case when vf_r contains "&ex3." then 1 else 0 end as tp3,
+case when vf_r contains "&ex4." then 1 else 0 end as tp4,
+case when vf_r contains "&ex5." then 1 else 0 end as tp5,
+case when vf_r contains "&ex6." then 1 else 0 end as tp6,
+sum(calculated tp1,calculated tp2,calculated tp3,calculated tp4,calculated tp5,calculated tp6) as sum
+from r0_ref_jkr1 t1;
+quit;
+
+PROC SQL;
+   CREATE TABLE WORK.r0_rap_jkr AS 
+   SELECT t1.sum, 
+          /* COUNT_of_sum */
+            (COUNT(t1.sum)) AS COUNT_of_sum
+      FROM WORK.r0_verif_result_jkr t1
+      GROUP BY t1.sum;
+QUIT;
+
+ 
